@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catch the Falling Stars</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #000; /* Night sky */
+            color: #fff; /* White text */
+            margin: 0;
+            overflow: hidden;
+        }
+
+        h1 {
+            margin: 10px 0;
+        }
+
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 90vh;
+            margin: 0 auto;
+            border: 2px solid #fff;
+        }
+
+        #basket {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+        }
+
+        .star {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: #ff0;
+            border-radius: 50%;
+            animation: fall linear;
+        }
+
+        #score {
+            position: absolute;
+            top: 10px;
+            left: 20px;
+            font-size: 20px;
+        }
+
+        #missed {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-size: 20px;
+        }
+
+        #game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 30px;
+            color: red;
+            display: none;
+        }
+
+        @keyframes fall {
+            from {
+                top: -20px;
+            }
+            to {
+                top: 100vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Catch the Falling Stars 🌟</h1>
+    <div id="game-container">
+        <div id="basket"></div>
+        <div id="score">Score: 0</div>
+        <div id="missed">Missed: 0</div>
+        <div id="game-over">Game Over! Refresh to Play Again.</div>
+    </div>
+    <script>
+        const gameContainer = document.getElementById('game-container');
+        const basket = document.getElementById('basket');
+        const scoreDisplay = document.getElementById('score');
+        const missedDisplay = document.getElementById('missed');
+        const gameOverMessage = document.getElementById('game-over');
+
+        let score = 0;
+        let missed = 0;
+        const maxMisses = 5; // Maximum missed stars before game over
+        let gameInterval;
+
+        // Move the basket
+        document.addEventListener('keydown', (e) => {
+            const basketPos = basket.offsetLeft;
+            const step = 20;
+            if (e.key === 'ArrowLeft' && basketPos > 0) {
+                basket.style.left = `${basketPos - step}px`;
+            } else if (e.key === 'ArrowRight' && basketPos < window.innerWidth - 100) {
+                basket.style.left = `${basketPos + step}px`;
+            }
+        });
+
+        // Generate stars
+        function generateStar() {
+            const star = document.createElement('div');
+            star.classList.add('star');
+            star.style.left = `${Math.random() * (window.innerWidth - 20)}px`;
+            star.style.animationDuration = `${2 + Math.random() * 3}s`;
+            gameContainer.appendChild(star);
+
+            // Remove star after falling
+            star.addEventListener('animationend', () => {
+                if (gameContainer.contains(star)) {
+                    gameContainer.removeChild(star);
+                    missed++;
+                    missedDisplay.textContent = `Missed: ${missed}`;
+
+                    // Check if max misses reached
+                    if (missed >= maxMisses) {
+                        endGame();
+                    }
+                }
+            });
+
+            // Check for collision
+            const starInterval = setInterval(() => {
+                const starRect = star.getBoundingClientRect();
+                const basketRect = basket.getBoundingClientRect();
+
+                if (
+                    starRect.bottom >= basketRect.top &&
+                    starRect.left <= basketRect.right &&
+                    starRect.right >= basketRect.left
+                ) {
+                    // Increment score
+                    score++;
+                    scoreDisplay.textContent = `Score: ${score}`;
+                    gameContainer.removeChild(star);
+                    clearInterval(starInterval);
+                }
+            }, 50);
+        }
+
+        // Start the game
+        function startGame() {
+            score = 0;
+            missed = 0;
+            scoreDisplay.textContent = `Score: ${score}`;
+            missedDisplay.textContent = `Missed: ${missed}`;
+            gameOverMessage.style.display = 'none';
+            gameInterval = setInterval(generateStar, 800);
+        }
+
+        // End the game
+        function endGame() {
+            clearInterval(gameInterval);
+            gameOverMessage.style.display = 'block';
+        }
+
+        startGame();
+    </script>
+</body>
+</html>
